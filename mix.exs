@@ -18,16 +18,11 @@ defmodule P7.Mixfile do
      mod: {P7, []}]
   end
 
-  # Dependencies can be Hex packages:
-  #
-  #   {:mydep, "~> 0.3.0"}
-  #
-  # Or git/path repositories:
-  #
-  #   {:mydep, git: "https://github.com/elixir-lang/mydep.git", tag: "0.1.0"}
-  #
-  # Type `mix help deps` for more examples and options
   defp deps do
-    []
+    [
+      {:poolboy,  github: "devinus/poolboy" },
+      {:exactor,  "~> 2.2"},
+      {:blocking_queue, "~> 1.0"},
+    ]
   end
 end
