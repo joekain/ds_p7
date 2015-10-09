@@ -1,4 +1,25 @@
 defmodule P7.PoolUtil do
+  def into(enum, col, opts) do
+    pool = opts[:via]
+    {:ok, queue} = BlockingQueue.start_link(:infinity)
+
+    enum
+    |> resource(pool, queue)
+    |> extract_and_checkin(pool)
+    |> Stream.into(col, fn x -> x end)
+  end
+
+  defp resource(enum, pool, queue) do
+    Stream.resource(
+      fn ->
+        spawn_link fn -> stream_through_pool(enum, pool, queue) end
+      end,
+
+      fn _ -> {[BlockingQueue.pop(queue)], nil} end,
+      fn _ -> true end
+    )
+  end
+
   defp stream_through_pool(enum, pool, queue) do
     enum
     |> Enum.map(fn x -> {x, :poolboy.checkout(pool)} end)
@@ -10,17 +31,5 @@ defmodule P7.PoolUtil do
       :poolboy.checkin(pool, worker)
       result
     end
-  end
-
-  def into(enum, col, opts) do
-    pool = opts[:via]
-    {:ok, queue} = BlockingQueue.start_link(:infinity)
-
-    spawn_link fn -> stream_through_pool(enum, pool, queue) end
-
-    queue
-    |> BlockingQueue.pop_stream
-    |> extract_and_checkin(pool)
-    |> Stream.into(col, fn x -> x end)
   end
 end
